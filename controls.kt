@@ -41,6 +41,8 @@ class Controls : View() {
 
                 action { find(popup::class).openWindow(resizable = true)?.let { it.width = controller.image.width ; it.height = controller.image.height } }
 
+                enableWhen { controller.imageProp.isNotNull }
+
             }
 
             button("v insert (experimental)") {

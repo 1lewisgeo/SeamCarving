@@ -1,6 +1,8 @@
 import javafx.geometry.Pos
+import javafx.scene.control.ContentDisplay
 import javafx.scene.paint.Color
 import tornadofx.*
+import java.net.URI
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -124,6 +126,40 @@ class Styles(): Stylesheet() {
             minWidth = 300.px
 
             maxWidth = 300.px
+
+        }
+
+        checkBox {
+
+            select(".box") {
+
+                borderRadius += box(0.px)
+
+                borderWidth += box(1.px)
+
+                borderColor += box(text)
+
+                backgroundRadius += box(0.px)
+
+                backgroundColor += Color.TRANSPARENT
+
+                contentDisplay = ContentDisplay.TEXT_ONLY
+
+            }
+
+            and(selected) {
+
+                select(".box") {
+
+                    contentDisplay = ContentDisplay.TEXT_ONLY
+
+                    backgroundColor += text
+
+                }
+
+            }
+
+            textFill = text
 
         }
 
