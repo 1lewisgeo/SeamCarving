@@ -5,6 +5,12 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+
+/**
+ * CSS Style sheet using Kotlin DSL's
+ * Dark theme
+ * Inspiration from https://github.com/bulenkov/Darcula
+ */
 class Styles(): Stylesheet() {
 
     companion object {
@@ -149,6 +155,10 @@ class Styles(): Stylesheet() {
 
                 }
 
+            }
+
+            select("#controlroot") {
+                padding = box(20.px, 0.px, 0.px, 0.px)
             }
 
         }

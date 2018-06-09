@@ -6,11 +6,16 @@ import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import tornadofx.*
 
+/**
+ * Some UI controls
+ */
 class Controls : View() {
 
     val controller: MainController by inject()
 
     override val root: Parent = hbox {
+
+        id = "controlroot"
 
         vbox {
 
@@ -18,13 +23,13 @@ class Controls : View() {
 
             hgrow = Priority.ALWAYS
 
-            button("Horizontal Seam Carve") {
+            button("Horizontal Seam Carve (H Button)") {
                 action { fire(SeamRequestEvent(Type.H)) }
                 accelerators.put(kc("H")) { fire() }
                 enableWhen { controller.imageProp.isNotNull }
             }
 
-            button("Vertical Seam Carve") {
+            button("Vertical Seam Carve (V Button)") {
                 action { fire(SeamRequestEvent(Type.V)) }
                 accelerators.put(kc("V")) { fire() }
                 enableWhen { controller.imageProp.isNotNull }
@@ -32,18 +37,18 @@ class Controls : View() {
 
             checkbox("Show Seams") { controller.showSeams.bind(selectedProperty()) ; isSelected = true }
 
-            button("Resizable Pop-up") {
+            button("Resizable Pop-up (experimental & buggy)") {
 
-                action { find(popup::class).openWindow() }
+                action { find(popup::class).openWindow(resizable = true)?.let { it.width = controller.image.width ; it.height = controller.image.height } }
 
             }
 
-            /*button("v insert") {
+            button("v insert (experimental)") {
                 action { controller.verticalInsert(10) }
                 enableWhen { controller.imageProp.isNotNull }
-            }*/
+            }
 
-            button("Toggle energy") {
+            button("Toggle energy (stub)") {
                 action { controller.energyView.set(!controller.energyView.get()) }
                 enableWhen { controller.imageProp.isNotNull }
             }
@@ -70,6 +75,8 @@ class Controls : View() {
             top = label() { textProperty().bind(find(MainController::class).locationProp.stringBinding { if (it == null) "No Image" else it.toString() }) ; id = "url" ; borderpaneConstraints { alignment = Pos.TOP_CENTER } }
 
             center = vbox {
+
+                    // It's structured like this because the file location was meant to be the
 
                     id = "infobox"
 

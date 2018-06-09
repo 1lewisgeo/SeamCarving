@@ -6,18 +6,31 @@ import javafx.scene.image.WritableImage
 import javafx.scene.input.KeyCombination
 import javafx.scene.layout.BorderPane
 import javafx.stage.FileChooser
+import javafx.stage.Stage
 import tornadofx.*
 import java.net.URL
 
 class KApp(): App(MainView::class, Styles::class) {
 
+    // Add font
     init { FX.stylesheets.add("http://fonts.googleapis.com/css?family=Ubuntu") }
 
+    override fun start(stage: Stage) {
+        super.start(stage)
+
+        // Set min sizes of main window
+        stage.minHeight = 800.0
+        stage.minWidth = 1000.0
+    }
+
+    // Fire event to notify components of a shutdown
     override fun stop() { fire(StopEvent) }
 
 }
 
 class MainView(): View() {
+
+    // Dependency injection of ui components and controller
 
     private val controller: MainController by inject()
 
@@ -30,6 +43,8 @@ class MainView(): View() {
     override val root = BorderPane()
 
     init {
+
+        // Creation of base ui
 
         with (root) {
 
@@ -46,6 +61,7 @@ class MainView(): View() {
                 this
             }
 
+            // bind the image view to the controller image
             imageView.imageProperty().bind(controller.imageProp)
 
             controller.energyView.onChange {
@@ -64,6 +80,7 @@ class MainView(): View() {
 
 }
 
+// Launch the program
 fun main(args: Array<String>) {
     Application.launch(KApp::class.java, *args)
 }

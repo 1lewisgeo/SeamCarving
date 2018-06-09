@@ -6,6 +6,9 @@ import javafx.stage.FileChooser
 import tornadofx.*
 import java.net.URL
 
+/**
+ * The menu bar at the top
+ */
 class Menu(): View() {
 
     override val root = menubar {
@@ -16,7 +19,7 @@ class Menu(): View() {
 
                 item("From File...", "Ctrl+O").action { chooseImage() }
 
-                item("From Url...").action {
+                item("From Url... (EXPERIMENTAL)").action { // this doesnt actually work properly
 
                     TextInputDialog().run {
                         title = "Input URL"

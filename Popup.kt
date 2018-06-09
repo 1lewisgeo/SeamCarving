@@ -1,58 +1,68 @@
 import javafx.scene.Parent
+import javafx.scene.layout.AnchorPane
 import tornadofx.*
 
 class popup(): View() {
 
-    override val root = anchorpane {
+    override val root = anchorpane()
 
-        println("Create popup")
+    val controller = find(MainController::class)
 
+    override fun onDock() {
+
+        // Notify subscribers a popup has been opened
         fire(PopupEvent(true))
 
-        val anchor = this
+        val stage = currentStage!!
 
-        with (find(MainController::class).image) {
-            modalStage?.width = width
-            modalStage?.height = height
-        }
+        stage.width = controller.image.width + 10
 
-        imageview(find(MainController::class).image)
+        stage.height = controller.image.height + 10
 
-        modalStage?.widthProperty()?.addListener { observableValue, old, nnew ->
+        stage.minWidth = controller.image.width + 10
 
-            for (x in 0..(nnew.toInt() - old.toInt())) {
+        stage.minHeight = controller.image.width + 10
 
-                fire(SeamRequestEvent(Type.V))
+        with (root) {
+
+            val anchor = this
+
+            with (find(MainController::class).image) {
+                modalStage?.width = width
+                modalStage?.height = height
+            }
+
+            imageview().let { it.imageProperty().bind(controller.imageProp) ; it }
+
+            // Listen for changes in the size of the window
+
+            stage.widthProperty()?.addListener { observableValue, old, nnew ->
+
+                for (x in 0..(nnew.toInt() - old.toInt())) {
+
+                    fire(SeamRequestEvent(Type.V))
+
+                }
+
+            }
+
+            stage?.heightProperty()?.addListener { observableValue, old, nnew ->
+
+                for (x in 0..(nnew.toInt() - old.toInt())) {
+
+                    fire(SeamRequestEvent(Type.H))
+
+                }
 
             }
 
         }
 
-        modalStage?.let {
-            it.widthProperty().onChange {
-                println(it)
-            }
-        }
-
-        modalStage?.heightProperty()?.addListener { observableValue, old, nnew ->
-
-            for (x in 0..(nnew.toInt() - old.toInt())) {
-
-                fire(SeamRequestEvent(Type.H))
-
-            }
-
-        }
 
     }
 
-    override fun onCreate() {
-
-
-    }
-
-    override fun onDelete() {
-        println("Delete popup")
+    override fun onUndock() {
+        // Inform subscribers the popup has been closed
         fire(PopupEvent(false))
     }
 

@@ -9,6 +9,9 @@ import java.net.URL
 import javax.imageio.ImageIO
 import kotlin.reflect.jvm.reflect
 
+/**
+ * Utility method to choose an image and fire the event to trigger a change
+ */
 fun chooseImage() {
 
     chooseFile(filters = arrayOf(FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg")), mode = FileChooserMode.Single).takeIf { it.isNotEmpty() }?.let {
@@ -20,6 +23,9 @@ fun chooseImage() {
 
 }
 
+/**
+ * Utility method to save the current image
+ */
 fun saveImage() {
 
     chooseFile(filters = arrayOf(FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg")), mode = FileChooserMode.Save).firstOrNull()?.let { file ->
@@ -38,6 +44,10 @@ fun saveImage() {
 
 }
 
+/**
+ * Turn a regular Image into a WritableImage
+ * @return The same image, but writable
+ */
 fun Image.writable(): WritableImage {
 
     val w = WritableImage(width.toInt(), height.toInt())
@@ -56,8 +66,17 @@ fun Image.writable(): WritableImage {
 
 }
 
+/**
+ * Square a number
+ */
 fun Int.square(): Int = this * this
 
+/**
+ * Remove a list of pixels from a WritableImage, reducing the width by widthr
+ * @param pixels the list of pixels to remove
+ * @param widthr the reduction in width
+ * @return the new writableimage
+ */
 fun WritableImage.removeV(pixels: Array<Point2D>, widthr: Int): WritableImage {
 
     val wv = WritableImage(width.toInt() - widthr, height.toInt())
@@ -82,6 +101,12 @@ fun WritableImage.removeV(pixels: Array<Point2D>, widthr: Int): WritableImage {
 
 }
 
+/**
+ * Remove a list of pixels from a WritableImage, reducing the height by heightr
+ * @param pixels the list of pixels to remove
+ * @param heightr the reduction in height
+ * @return the new writableimage
+ */
 fun WritableImage.removeH(pixels: Array<Point2D>, heightr: Int = 0): WritableImage {
 
     val wh = WritableImage(width.toInt(), height.toInt() - heightr)
@@ -102,6 +127,9 @@ fun WritableImage.removeH(pixels: Array<Point2D>, heightr: Int = 0): WritableIma
 
 }
 
+/**
+ * Extension method to benchmark an arbitrary function, unfunctional and unused
+ */
 fun <T> Function<T>.benchmark(vararg args: Any): Pair<Long, T?> {
 
     val time = System.currentTimeMillis()
@@ -112,6 +140,10 @@ fun <T> Function<T>.benchmark(vararg args: Any): Pair<Long, T?> {
 
 }
 
+/**
+ * Creates a copy of a WritableImage
+ * @return a copy of the image
+ */
 fun WritableImage.copy(): WritableImage {
 
     val w = WritableImage(width.toInt(), height.toInt())
@@ -126,6 +158,9 @@ fun WritableImage.copy(): WritableImage {
 
 }
 
+
+// Utility extension methods
+
 val Point2D.xi: Int
     get() = this.x.toInt()
 
@@ -134,17 +169,27 @@ val Point2D.yi: Int
 
 fun kc(combination: String): KeyCombination = KeyCombination.keyCombination(combination)
 
+// true if the url is a local file
 val URL.localFile: Boolean
     get() = this.toString().startsWith("file:/")
 
+// Events
+// object -> event carries no additional information
+// class -> event has parameters and can be used to transfer data
+
 enum class Type { V, H }
 
+// Sent when a seam needs to be removed
 class SeamRequestEvent(val t: Type): FXEvent()
 
+// Sent upon termination of the program
 object StopEvent: FXEvent()
 
+// Sent when a new image is set
 class ImageSetEvent(val location: URL): FXEvent()
 
+// Sent when the image is modified in any way
 object ImageModifiedEvent: FXEvent()
 
+// Sent when the popup is opened or closed
 class PopupEvent(val open: Boolean): FXEvent()

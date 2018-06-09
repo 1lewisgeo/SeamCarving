@@ -2,7 +2,6 @@ import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.geometry.Point2D
 import javafx.scene.control.Alert
-import javafx.scene.image.Image
 import javafx.scene.image.WritableImage
 import javafx.scene.paint.Color
 import tornadofx.Controller
@@ -10,14 +9,16 @@ import tornadofx.alert
 import tornadofx.onChange
 import tornadofx.point
 import java.net.URL
-import java.util.*
 import java.util.concurrent.Callable
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import java.util.concurrent.locks.ReentrantLock
 
+/**
+ * Program business logic
+ */
 class MainController(): Controller() {
+
+    // UI bindings
 
     val imageProp = SimpleObjectProperty<WritableImage>()
 
@@ -37,6 +38,8 @@ class MainController(): Controller() {
         get() = imageProp.get()
         set(value) = imageProp.set(value)
 
+    // Used internally
+
     internal val width: Int
         get() = imageProp.get().width.toInt()
 
@@ -49,15 +52,47 @@ class MainController(): Controller() {
 
     internal val executor = Executors.newWorkStealingPool()
 
+    // Utility methods
+
+    /**
+     * Gets the rgb information of a pixel
+     * @return rgb data array
+     */
     internal fun pixel(x: Int, y: Int): Array<Int> = imageProp.get().pixelReader.getColor(x, y).run { arrayOf((red*255).toInt(), (green*255).toInt(), (blue*255).toInt()) }
 
-    internal fun check(x: Int = 0, y: Int = 0) = !(x < 0 || y < 0 || x >= width-1 || y >= height-1)
+    /**
+     * Checks that coordinates are within bounds
+     * @return true if within bounds
+     */
+    internal fun check(x: Int = 0, y: Int = 0): Boolean = !(x < 0 || y < 0 || x >= width-1 || y >= height-1)
 
+    /**
+     * Gets the red value of the given pixel
+     * @return the red value
+     */
     internal fun r(x: Int, y: Int): Int = if (check(x, y)) pixel(x, y)[0] else 0
+
+    /**
+     * Gets the green value of the given pixel
+     * @return the green value
+     */
     internal fun g(x: Int, y: Int): Int = if (check(x, y)) pixel(x, y)[1] else 0
+
+    /**
+     * Gets the blue value of the given pixel
+     * @return the blue value
+     */
     internal fun b(x: Int, y: Int): Int = if (check(x, y)) pixel(x, y)[2] else 0
 
-    public fun energy(x: Int, y: Int): Int {mutableMapOf<Pair<Int, Int>, Int>(0 to 0 to 0)
+    /**
+     * Calculate the energy of a pixel
+     * @param x the x coordinate
+     * @param y the y coordinate
+     * @return the energy of the pixel
+     */
+    fun energy(x: Int, y: Int): Int {
+
+        //mutableMapOf<Pair<Int, Int>, Int>(0 to 0 to 0)
 
 //        if (x to y in cache) {
 //            println(cache)
@@ -79,6 +114,10 @@ class MainController(): Controller() {
 //        }
     }
 
+    /**
+     * Calculates and returns all the horizontal seams
+     * @return a list of seams and their energy value
+     */
     internal fun allVSeams(): Array<Pair<Array<Point2D>, Int>> {
 
         fun hseam(x: Int): Pair<Array<Int>, Int> {
@@ -117,10 +156,16 @@ class MainController(): Controller() {
 
         }
 
+
+        // Threaded execution of seam finding
         return executor.invokeAll<Pair<Array<Int>, Int>>((0 until width).map { Callable<Pair<Array<Int>, Int>> { hseam(it) } }.toMutableList()).map { it.get() }.map { it.first.mapIndexed { index: Int, i: Int -> point(i, index) }.toTypedArray() to it.second }.toTypedArray()
 
     }
 
+    /**
+     * Get the lowest energy vertical seam
+     * @return the lowest energy vertical seam
+     */
     public fun verticalSeam(): Array<Point2D> {
 
         return allVSeams().minBy { it.second }!!.first
@@ -139,7 +184,12 @@ class MainController(): Controller() {
 
     }
 
+    /**
+     * Calculates all horizontal seams
+     * @return all horizontal seams and their energy value
+     */
     internal fun allHSeams(): Array<Pair<Array<Point2D>, Int>> {
+
         fun vseam(x: Int): Pair<Array<Int>, Int> {
 
             //println(Thread.currentThread().name)
@@ -178,10 +228,15 @@ class MainController(): Controller() {
 
         }
 
+        // Threaded execution
         return executor.invokeAll<Pair<Array<Int>, Int>>((0 until height).map { Callable<Pair<Array<Int>, Int>> { vseam(it) } }.toMutableList()).map { it.get() }.map { it.first.mapIndexed { index: Int, i: Int -> point(index, i) }.toTypedArray() to it.second }.toTypedArray()
 
     }
 
+    /**
+     * Find the lowest energy horizontal seam
+     * @return the lowest energy horizontal seam
+     */
     public fun horizontalSeam(): Array<Point2D> {
 
         return allHSeams().minBy { it.second }!!.first
@@ -206,6 +261,11 @@ class MainController(): Controller() {
 
     }
 
+    /**
+     * EXPERIMENTAL
+     * Inserts a vertical seam
+     * @param n the number of seams to insert
+     */
     fun verticalInsert(n: Int) {
 
         val seams = allVSeams().also { it.sortBy { it.second } }.filterIndexed { index, pair -> index < n }.map { it.first }
@@ -240,14 +300,20 @@ class MainController(): Controller() {
 
     }
 
+    /**
+     * BROKEN
+     * Get a grayscale energy heatmap of the image
+     */
     fun energyImage(): WritableImage {
 
         val w = WritableImage(width, height)
 
+        // get a list of all the indexes
         val indexes = (0 until width).map { out -> (0 until height).map { it to out } }.flatMap { it.asIterable() }
 
         val max = indexes.map { energy(it.first, it.second) }.max()!!
 
+        // Calculate corresponding color values
         indexes.forEach { w.pixelWriter.setColor(it.first, it.second, Color.gray(energy(it.first, it.second) / max.toDouble())) }
 
         return w
@@ -255,6 +321,8 @@ class MainController(): Controller() {
     }
 
     init {
+
+        // Event bindings for ui interaction
 
         imageProp.onChange { cache.clear() ; fire(ImageModifiedEvent) }
 
@@ -264,30 +332,28 @@ class MainController(): Controller() {
                 alert(Alert.AlertType.WARNING, "Warning", "You must select an image before removing seams.").run { return@subscribe }
             }
 
+            if (height == 0 || width == 0) {
+                alert(Alert.AlertType.ERROR, "Error", "Image width/height cannot be 0!").run { return@subscribe }
+            }
+
             if (showSeams.get()) {
 
+                // remove seams with preview
+
                 runAsync {
-                    val t = it.t
                     lock.lock()
-                    val a = if (it.t == Type.V) verticalSeam() else horizontalSeam()
-                    /*this.completedProperty.onChange {
-                        //runAsync {
-                            Thread.sleep(500)
+                    val seam = if (it.t == Type.V) verticalSeam() else horizontalSeam()
 
-                            image = if (t == Type.V) image.removeV(a, 1) else image.removeH(a, 1)
-
-                            lock.unlock()
-                        //}
-                    }*/
-                    for (point in a) {
-                        //println("setting $x ${a[x]} ; ${controller.width} x ${controller.height}")
+                    for (point in seam) {
+                        // Draw seam
                         if (it.t == Type.V) image.pixelWriter.setColor(point.xi, point.yi, Color.RED) else image.pixelWriter.setColor(point.xi, point.yi, Color.RED)
-                        //controller.imageProp.set(controller.imageProp.get().remove(it.mapIndexed { index: Int, i: Int -> i to index }.toTypedArray(), 1))
                     }
 
+                    // Wait
                     Thread.sleep(500)
 
-                    image = if (t == Type.V) image.removeV(a, 1) else image.removeH(a, 1)
+                    // Do actual seam removal
+                    image = if (it.t == Type.V) image.removeV(seam, 1) else image.removeH(seam, 1)
 
                     lock.unlock()
 
@@ -295,8 +361,11 @@ class MainController(): Controller() {
 
             } else {
 
+                // Remove seams wihtout preview
+
                 lock.lock()
 
+                // Remove seam
                 image = if (it.t == Type.V) image.removeV(verticalSeam(), 1) else image.removeH(horizontalSeam(), 1)
 
                 lock.unlock()
@@ -305,6 +374,7 @@ class MainController(): Controller() {
 
         }
 
+        // Shutdown executor properly
         subscribe<StopEvent> { executor.shutdown() }
 
         subscribe<ImageSetEvent> { location = it.location }
